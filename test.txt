@@ -1,0 +1,32 @@
+/**
+ * 将查出来的数据转化为用户可读数据
+ * @param tableName 数据所在的数据表名
+ * @param data 待转化的数据
+ * @returns {*} 转化后的数据
+ */
+function changeFields(tableName, data) {
+  //通过表的名字查到表的基本信息，主要是为了拿到表ID
+  var table = informat.table.getTable(tableName)
+  // 通过表的ID查到各个字段的定义，主要是为了拿到字段真实ID和显示名称的对应关系
+  var fieldList = informat.table.getFieldList(table.id)
+
+  fieldList.forEach(item => {
+    //对于单选和多选，不仅仅要转化字段名称，他们值也是数据库ID，要讲ID转化为真实的选项
+    if (item.type == 'SingleSelect') {
+      const temp = item.setting.optionList.find(f => f.id == data[item.id])
+      data[item.name] = temp ? temp.name : ''
+    } else if (item.type == 'MultiSelect') {
+      data[item.name] = []
+      if (data[item.id]) {
+        data[item.id].forEach(ii => {
+          const temp2 = item.setting.optionList.find(f => f.id == ii)
+          data[item.name].push(temp2 ? temp2.name : '')
+        })
+      }
+    } else {
+      //对于一般字段，直接给对应的显示名称属性赋值即可
+      data[item.name] = data[item.id]
+    }
+  })
+  return data
+}
